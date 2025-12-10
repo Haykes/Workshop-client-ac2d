@@ -1,0 +1,87 @@
+version: "3.9"
+
+networks:
+  workshop-client.network:
+    name: workshop-client.network
+    driver: bridge
+
+volumes:
+  workshop-client-postgres-db:
+    driver: local
+
+services:
+  backend-php:
+    container_name: ac2d-backend-php
+    build:
+      context: ./backend
+      dockerfile: ./docker/php/Dockerfile
+    restart: always
+    volumes:
+      - ./backend:/var/www/app.dev
+    tty: true
+    env_file:
+      - ./backend/.env
+    networks:
+      - workshop-client.network
+    ports:
+      - "9095:9000"
+      - "9093:9003"
+
+  backend-apache:
+    container_name: ac2d-backend-apache
+    build:
+      context: ./backend
+      dockerfile: ./docker/apache/Dockerfile
+    restart: always
+    volumes:
+      - ./backend:/var/www/app.dev
+    depends_on:
+      - backend-php
+    networks:
+      workshop-client.network:
+        aliases:
+          - backend-apache
+    ports:
+      - "${BACKEND_PORT:-8075}:80"
+
+  postgres:
+    image: postgres:17-alpine3.21
+    container_name: ac2d-postgres
+    volumes:
+      - workshop-client-postgres-db:/var/lib/postgresql/data
+    tty: true
+    restart: always
+    networks:
+      - workshop-client.network
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    env_file:
+      - ./backend/.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-symfony}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-symfony}
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+
+  frontend:
+    container_name: ac2d-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend-apache}
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend-apache}
+      NEXT_TELEMETRY_DISABLED: 1
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    restart: unless-stopped
+    depends_on:
+      - backend-apache
+    networks:
+      - workshop-client.network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

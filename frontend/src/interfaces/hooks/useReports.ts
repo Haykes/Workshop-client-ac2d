@@ -1,94 +1,104 @@
+import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { httpClient } from "@/shared/api/httpClient";
 import type {
-	CreateReportRequestDto,
-	ReportDto,
+        CreateReportRequestDto,
+        ReportDto,
+        ReportEntryDto,
+        ReportEntryListResponseDto,
+        ReportListResponseDto,
 } from "@/interfaces/dtos/reports";
 
 export function useReports(page: number = 1) {
-	return useQuery({
-		queryKey: ["reports", page],
-		queryFn: async () => {
-			// Mock data for demo - replace with real API call
-			await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
+        return useQuery({
+                queryKey: ["reports", page],
+                queryFn: async () => {
+                        const { data } = await httpClient.get<ReportListResponseDto>(
+                                "/api/reports",
+                                { params: { page } }
+                        );
 
-			const mockReports: ReportDto[] = [
-				{
-					id: 1,
-					createdAt: "2025-01-15T10:30:00Z",
-					status: "validated",
-					title: "Test tension Phase 1",
-				},
-				{
-					id: 2,
-					createdAt: "2025-01-15T14:20:00Z",
-					status: "pending",
-					title: "Test courant Phase 2",
-				},
-				{
-					id: 3,
-					createdAt: "2025-01-14T16:45:00Z",
-					status: "validated",
-					title: "Test continuité Phase-Neutre",
-				},
-				{
-					id: 4,
-					createdAt: "2025-01-14T09:15:00Z",
-					status: "rejected",
-					title: "Test résistance Prise de terre",
-				},
-				{
-					id: 5,
-					createdAt: "2025-01-13T11:30:00Z",
-					status: "validated",
-					title: "Test température Armoire",
-				},
-			];
+                        return data;
+                },
+                staleTime: 30_000,
+        });
+}
 
-			return {
-				"hydra:member": mockReports,
-				"hydra:totalItems": mockReports.length,
-			};
-		},
-		staleTime: 30_000,
-	});
+export function useReportEntries(reportId?: number) {
+        return useQuery({
+                queryKey: ["reportEntries", reportId ?? "all"],
+                queryFn: async () => {
+                        const { data } = await httpClient.get<ReportEntryListResponseDto>(
+                                "/api/report_entries",
+                                {
+                                        params: reportId ? { "report.id": reportId } : undefined,
+                                }
+                        );
+
+                        return data;
+                },
+                staleTime: 30_000,
+        });
+}
+
+export function useReportSummaries() {
+        const { data: reports, ...reportsMeta } = useReports();
+        const { data: entries, ...entriesMeta } = useReportEntries();
+
+        const summaries = useMemo(() => {
+                        if (!reports?.["hydra:member"]) return [];
+
+                        const groupedEntries = new Map<
+                                number,
+                                { count: number; lastTestedAt?: string }
+                        >();
+
+                        entries?.["hydra:member"].forEach((entry: ReportEntryDto) => {
+                                const current = groupedEntries.get(entry.reportId) ?? {
+                                        count: 0,
+                                };
+
+                                const newerDate = current.lastTestedAt
+                                        ? new Date(current.lastTestedAt) < new Date(entry.testedAt)
+                                                ? entry.testedAt
+                                                : current.lastTestedAt
+                                        : entry.testedAt;
+
+                                groupedEntries.set(entry.reportId, {
+                                        count: current.count + 1,
+                                        lastTestedAt: newerDate,
+                                });
+                        });
+
+                        return reports["hydra:member"].map((report: ReportDto) => {
+                                const entryStats = groupedEntries.get(report.id);
+
+                                return {
+                                        ...report,
+                                        entriesCount: entryStats?.count ?? 0,
+                                        lastTestedAt: entryStats?.lastTestedAt ?? null,
+                                } as const;
+                        });
+                }, [entries, reports]);
+
+        return {
+                data: summaries,
+                reports,
+                entries,
+                isLoading: reportsMeta.isLoading || entriesMeta.isLoading,
+        };
 }
 
 export function useCreateReport() {
-	const qc = useQueryClient();
-	return useMutation({
-		mutationKey: ["create-report"],
-		mutationFn: async (payload: CreateReportRequestDto) => {
-			// Mock creation for demo - replace with real API call
-			await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network delay
-
-			const newReport: ReportDto = {
-				id: Math.floor(Math.random() * 1000) + 100,
-				createdAt: new Date().toISOString(),
-				status: "pending",
-				title: payload.selection.join(", "),
-			};
-
-			return newReport;
-		},
-		onSuccess: async () => {
-			await qc.invalidateQueries({ queryKey: ["reports"] });
-		},
-	});
-}
-
-export function useDashboardKpis() {
-	return useQuery({
-		queryKey: ["kpis"],
-		queryFn: async () => {
-			// Mock KPIs for demo - replace with real API call
-			await new Promise((resolve) => setTimeout(resolve, 300)); // Simulate network delay
-
-			return {
-				total: 42,
-				pending: 5,
-				validated: 37,
-			} as const;
-		},
-		staleTime: 30_000,
-	});
+        const qc = useQueryClient();
+        return useMutation({
+                mutationKey: ["create-report"],
+                mutationFn: async (payload: CreateReportRequestDto) => {
+                        const { data } = await httpClient.post("/api/reports", payload);
+                        return data;
+                },
+                onSuccess: async () => {
+                        await qc.invalidateQueries({ queryKey: ["reports"] });
+                },
+        });
 }
