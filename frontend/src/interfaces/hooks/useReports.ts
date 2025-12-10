@@ -89,6 +89,35 @@ export function useReportSummaries() {
         };
 }
 
+export function useDashboardKpis() {
+        const { data: reports, ...reportsMeta } = useReports();
+        const { data: entries, ...entriesMeta } = useReportEntries();
+
+        const kpis = useMemo(() => {
+                const total =
+                        reports?.["hydra:totalItems"] ??
+                        reports?.["hydra:member"]?.length ??
+                        0;
+
+                const { pending, validated } = (entries?.["hydra:member"] ?? []).reduce(
+                        (acc, entry: ReportEntryDto) => {
+                                if (entry.actualResult === entry.expectedResult) {
+                                        acc.validated += 1;
+                                } else {
+                                        acc.pending += 1;
+                                }
+
+                                return acc;
+                        },
+                        { pending: 0, validated: 0 }
+                );
+
+                return { total, pending, validated } as const;
+        }, [entries, reports]);
+
+        return { data: kpis, isLoading: reportsMeta.isLoading || entriesMeta.isLoading };
+}
+
 export function useCreateReport() {
         const qc = useQueryClient();
         return useMutation({
