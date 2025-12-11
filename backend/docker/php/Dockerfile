@@ -47,7 +47,8 @@ RUN docker-php-ext-install \
 WORKDIR ${WORKDIR}
 
 # Install Xdebug
-RUN pecl install xdebug \
+RUN pecl channel-update pecl.php.net \
+    && pecl install xdebug \
     && docker-php-ext-enable xdebug
 
 # Copy php settings
