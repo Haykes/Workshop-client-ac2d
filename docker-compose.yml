@@ -24,8 +24,8 @@ services:
     networks:
       - workshop-client.network
     ports:
-      - "9095:9000"
-      - "9093:9003"
+      - "${BACKEND_FPM_PORT:-9095}:9000"
+      - "${BACKEND_XDEBUG_PORT:-9093}:9003"
 
   backend-apache:
     container_name: ac2d-backend-apache
