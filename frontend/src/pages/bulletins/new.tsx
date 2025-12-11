@@ -183,7 +183,7 @@ function StepSelection({
                                 <FormControl>
                                         <FormLabel>Chargement des champs…</FormLabel>
                                         <NativeSelectRoot>
-                                                <NativeSelectField placeholder="Chargement" disabled />
+                                                <NativeSelectField placeholder="Chargement" isDisabled />
                                         </NativeSelectRoot>
                                 </FormControl>
                         )}
@@ -192,7 +192,7 @@ function StepSelection({
                                 <FormControl>
                                         <FormLabel>Aucun champ disponible</FormLabel>
                                         <NativeSelectRoot>
-                                                <NativeSelectField placeholder="Aucune donnée" disabled />
+                                                <NativeSelectField placeholder="Aucune donnée" isDisabled />
                                         </NativeSelectRoot>
                                 </FormControl>
                         )}
@@ -205,7 +205,7 @@ function StepSelection({
                                                 <NativeSelectRoot>
                                                         <NativeSelectField
                                                                 placeholder="Sélectionner une option"
-                                                                disabled={field.options.length === 0}
+                                                                isDisabled={field.options.length === 0}
                                                                 value={selected ?? ""}
                                                                 onChange={(e) =>
                                                                         updateSelection(
