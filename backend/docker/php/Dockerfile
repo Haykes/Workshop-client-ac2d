@@ -7,6 +7,7 @@ ENV WORKDIR=/var/www/app.dev
 # Updates and installs system dependencies
 RUN apk add --update --no-cache \
   bash \
+  curl \
   tzdata \
   libxml2-dev \
   libpng-dev \
@@ -46,8 +47,15 @@ RUN docker-php-ext-install \
 # Workdir
 WORKDIR ${WORKDIR}
 
-# Install Xdebug
-RUN pecl install xdebug \
+# Install Xdebug from source (avoid PECL network issues)
+RUN curl -L -o /tmp/xdebug.tgz https://xdebug.org/files/xdebug-3.3.2.tgz \
+    && tar -xzf /tmp/xdebug.tgz -C /tmp \
+    && cd /tmp/xdebug-3.3.2 \
+    && phpize \
+    && ./configure --enable-xdebug \
+    && make -j$(nproc) \
+    && make install \
+    && rm -rf /tmp/xdebug* \
     && docker-php-ext-enable xdebug
 
 # Copy php settings
