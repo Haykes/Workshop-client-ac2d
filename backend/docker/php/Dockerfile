@@ -48,15 +48,21 @@ RUN docker-php-ext-install \
 WORKDIR ${WORKDIR}
 
 # Install Xdebug from source (avoid PECL network issues)
-RUN curl -L -o /tmp/xdebug.tgz https://xdebug.org/files/xdebug-3.3.2.tgz \
-    && tar -xzf /tmp/xdebug.tgz -C /tmp \
-    && cd /tmp/xdebug-3.3.2 \
-    && phpize \
-    && ./configure --enable-xdebug \
-    && make -j$(nproc) \
-    && make install \
-    && rm -rf /tmp/xdebug* \
-    && docker-php-ext-enable xdebug
+ARG XDEBUG_VERSION=3.3.3
+# Download from xdebug.org to avoid intermittent PECL outages
+RUN set -eux; \
+    XDEBUG_URL="https://xdebug.org/files/xdebug-${XDEBUG_VERSION}.tgz"; \
+    cd /tmp; \
+    curl -fsSL -o xdebug.tgz "${XDEBUG_URL}"; \
+    tar -xzf xdebug.tgz; \
+    cd "/tmp/xdebug-${XDEBUG_VERSION}"; \
+    phpize; \
+    ./configure --enable-xdebug; \
+    make -j"$(nproc)"; \
+    make install; \
+    cd /; \
+    rm -rf /tmp/xdebug*; \
+    docker-php-ext-enable xdebug
 
 # Copy php settings
 COPY ./docker/php/conf.d ${PHP_INI_DIR}/conf.d
