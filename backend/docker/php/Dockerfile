@@ -72,8 +72,9 @@ COPY ./docker/php/crontab  /var/spool/cron/crontabs/root
 # Copy files to container
 COPY ./ /var/www/app.dev/
 
-# Install composer
-RUN ./docker/php/install-composer.sh
+# Install composer (ensure script is executable inside the image)
+RUN chmod +x ./docker/php/install-composer.sh \
+  && ./docker/php/install-composer.sh
 
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000
