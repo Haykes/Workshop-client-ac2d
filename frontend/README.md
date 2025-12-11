@@ -1,16 +1,26 @@
 # Frontend AC2D (Next.js)
 
-## Lancer uniquement le frontend en Docker
+## Lancer uniquement le frontend en Docker (production)
 
 ```bash
 # Depuis le dossier frontend
-cp .env.docker.example .env.docker # optionnel si vous voulez surcharger l'URL API
-cd frontend
-FRONTEND_PORT=3000 NEXT_PUBLIC_API_URL=http://localhost:8075 docker compose up -d frontend
+cp .env.docker.example .env.docker # optionnel si vous voulez surcharger l'URL API ou le port
+docker compose up -d frontend
 ```
 
 - Le conteneur expose le port 3000 par défaut.
-- `NEXT_PUBLIC_API_URL` pointe par défaut vers `http://localhost:8075` (le backend via Apache).
+- `NEXT_PUBLIC_API_URL` pointe par défaut vers `http://localhost:8075` (le backend via Apache en local).
+
+## Lancer le frontend en mode développement (hot reload)
+
+```bash
+# Depuis le dossier frontend
+cp .env.docker.example .env.docker
+docker compose -f docker-compose.dev.yml up
+```
+
+- Monte le code source local dans le conteneur et relance automatiquement lors des modifications.
+- Le réseau Docker `workshop-client.network` doit exister (il est créé automatiquement lorsque vous lancez le docker-compose racine ou peut être créé via `docker network create workshop-client.network`).
 
 ## Lancer le frontend + backend avec le docker-compose racine
 

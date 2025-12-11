@@ -14,7 +14,7 @@ SYMFONY  = $(PHP) bin/console
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help build up start down logs sh composer vendor sf cc test install init_hooks phpstan-dry-run phpstan-fix phpunit tests qa
+.PHONY        : help build up start down logs sh composer vendor sf cc test install init_hooks phpstan-dry-run phpstan-fix phpunit tests qa db-ready migrate seed-excel
 
 ## —— 🎵 🐳 The Symfony Docker Makefile 🐳 🎵 ——————————————————————————————————
 help: ## Outputs this help screen
@@ -58,7 +58,17 @@ vendor: ## Install vendors according to the current composer.lock file
 vendor: c=install --no-interaction
 vendor: composer
 
-install: start vendor init_hooks
+install: start vendor db-ready migrate seed-excel init_hooks
+
+db-ready: ## Wait until the Postgres service is ready to accept connections
+	@echo "⏳ Waiting for the database to be ready..."
+	@$(DOCKER_COMP) exec postgres sh -c 'until pg_isready -q; do echo "Waiting for Postgres..."; sleep 2; done'
+
+migrate: ## Apply database migrations
+	@$(SYMFONY) doctrine:migrations:migrate --no-interaction
+
+seed-excel: ## Import the default Excel dataset located in public/Import/import_file.xlsx
+	@$(SYMFONY) app:import-excel public/Import/import_file.xlsx
 
 ### —— Git 🌲 ———————————————————————————————————————————————————————————————————
 #init_hooks: ## Initialize Git hooks, or check if an update is available.

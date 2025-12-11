@@ -61,17 +61,15 @@ choco install make
 git clone https://github.com/Haykes/Workshop-client
 cd Workshop-client
 
-# Construire et démarrer les containers Docker
+# Construire et démarrer les containers Docker, installer les dépendances, attendre PostgreSQL,
+# appliquer les migrations et importer automatiquement le fichier public/Import/import_file.xlsx
 make install
 
-# Accéder au container php pour installer la suite
+# Accéder au container php pour installer la suite ou relancer manuellement les commandes Symfony
 make bash
 
-# Appliquer la migration vers la base de donnée
-php bin/console doctrine:migration:migrate
-
-# Commande pour alimenter la base de donnée via le fichier d'import 
-php bin/console app:import-excel public/Import/import_file.xlsx
+# (Optionnel) relancer l'import Excel par la suite
+make seed-excel
 
 # Vider le cache Symfony
 make cc
