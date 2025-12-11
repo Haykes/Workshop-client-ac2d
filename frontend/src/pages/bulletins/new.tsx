@@ -7,8 +7,8 @@ import {
         Textarea,
         HStack,
         Text,
-        Select,
         VStack,
+        chakra,
 } from "@chakra-ui/react";
 import type { ReactNode } from "react";
 import { Dispatch, SetStateAction, useMemo, useState } from "react";
@@ -22,6 +22,8 @@ interface SelectionState {
 }
 
 type Step = 1 | 2 | 3;
+
+const StyledSelect = chakra("select");
 
 // Composant FormControl custom
 const FormControl = ({
@@ -181,14 +183,36 @@ function StepSelection({
                         {isLoading && (
                                 <FormControl>
                                         <FormLabel>Chargement des champs…</FormLabel>
-                                        <Select placeholder="Chargement" isDisabled />
+                                        <StyledSelect
+                                                disabled
+                                                defaultValue=""
+                                                borderWidth="1px"
+                                                borderColor="gray.200"
+                                                borderRadius="md"
+                                                px={3}
+                                                py={2}>
+                                                <option value="" disabled>
+                                                        Chargement
+                                                </option>
+                                        </StyledSelect>
                                 </FormControl>
                         )}
 
                         {!isLoading && groupedFields?.length === 0 && (
                                 <FormControl>
                                         <FormLabel>Aucun champ disponible</FormLabel>
-                                        <Select placeholder="Aucune donnée" isDisabled />
+                                        <StyledSelect
+                                                disabled
+                                                defaultValue=""
+                                                borderWidth="1px"
+                                                borderColor="gray.200"
+                                                borderRadius="md"
+                                                px={3}
+                                                py={2}>
+                                                <option value="" disabled>
+                                                        Aucune donnée
+                                                </option>
+                                        </StyledSelect>
                                 </FormControl>
                         )}
 
@@ -197,8 +221,7 @@ function StepSelection({
                                 return (
                                         <FormControl key={field.id}>
                                                 <FormLabel>{field.label}</FormLabel>
-                                                <Select
-                                                        placeholder="Sélectionner une option"
+                                                <StyledSelect
                                                         value={selected ?? ""}
                                                         onChange={(e) =>
                                                                 updateSelection(
@@ -206,14 +229,20 @@ function StepSelection({
                                                                         e.target.value ? Number(e.target.value) : undefined
                                                                 )
                                                         }
-                                                        isDisabled={field.options.length === 0}>
+                                                        disabled={field.options.length === 0}
+                                                        borderWidth="1px"
+                                                        borderColor="gray.200"
+                                                        borderRadius="md"
+                                                        px={3}
+                                                        py={2}
+                                                        w="full">
                                                         <option value="">Aucune</option>
                                                         {field.options.map((option) => (
                                                                 <option key={option.id} value={option.id}>
                                                                         {option.label}
                                                                 </option>
                                                         ))}
-                                                </Select>
+                                                </StyledSelect>
                                         </FormControl>
                                 );
                         })}
@@ -264,7 +293,7 @@ function StepComment({
         now: string;
 }) {
         return (
-                <VStack align="stretch" spacing={4}>
+                <VStack align="stretch" gap={4}>
                         <FormControl>
                                 <FormLabel>Commentaire</FormLabel>
                                 <Textarea
