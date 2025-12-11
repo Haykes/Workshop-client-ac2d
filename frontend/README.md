@@ -10,6 +10,7 @@ docker compose up -d frontend
 
 - Le conteneur expose le port 3000 par défaut.
 - `NEXT_PUBLIC_API_URL` pointe par défaut vers `http://localhost:8075` (le backend via Apache en local).
+- Si vous ne créez pas `.env.docker`, le conteneur démarre avec les valeurs par défaut indiquées ci-dessus.
 
 ## Lancer le frontend en mode développement (hot reload)
 
