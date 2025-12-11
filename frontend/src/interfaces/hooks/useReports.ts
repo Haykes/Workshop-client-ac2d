@@ -102,3 +102,27 @@ export function useCreateReport() {
                 },
         });
 }
+
+export function useDashboardKpis() {
+        const { reports, entries, isLoading } = useReportSummaries();
+
+        const stats = useMemo(() => {
+                        const totalReports =
+                                reports?.["hydra:totalItems"] ??
+                                reports?.["hydra:member"]?.length ??
+                                0;
+
+                        const totalEntries =
+                                entries?.["hydra:totalItems"] ??
+                                entries?.["hydra:member"]?.length ??
+                                0;
+
+                        return {
+                                total: totalReports,
+                                pending: Math.max(totalReports - totalEntries, 0),
+                                validated: Math.min(totalEntries, totalReports),
+                        } as const;
+                }, [entries, reports]);
+
+        return { data: stats, isLoading };
+}
