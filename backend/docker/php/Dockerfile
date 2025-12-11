@@ -49,7 +49,8 @@ WORKDIR ${WORKDIR}
 
 # Install Xdebug from source (avoid PECL network issues)
 ARG XDEBUG_VERSION=3.3.3
-RUN curl -fsSL -o /tmp/xdebug.tgz "https://pecl.php.net/get/xdebug-${XDEBUG_VERSION}.tgz" \
+# Download from xdebug.org to avoid intermittent PECL outages
+RUN curl -fsSL -o /tmp/xdebug.tgz "https://xdebug.org/files/xdebug-${XDEBUG_VERSION}.tgz" \
     && tar -xzf /tmp/xdebug.tgz -C /tmp \
     && cd "/tmp/xdebug-${XDEBUG_VERSION}" \
     && phpize \
