@@ -7,8 +7,7 @@ import {
         Textarea,
         HStack,
         Text,
-        NativeSelectRoot,
-        NativeSelectField,
+        Select,
         VStack,
 } from "@chakra-ui/react";
 import type { ReactNode } from "react";
@@ -182,18 +181,14 @@ function StepSelection({
                         {isLoading && (
                                 <FormControl>
                                         <FormLabel>Chargement des champs…</FormLabel>
-                                        <NativeSelectRoot>
-                                                <NativeSelectField placeholder="Chargement" isDisabled />
-                                        </NativeSelectRoot>
+                                        <Select placeholder="Chargement" isDisabled />
                                 </FormControl>
                         )}
 
                         {!isLoading && groupedFields?.length === 0 && (
                                 <FormControl>
                                         <FormLabel>Aucun champ disponible</FormLabel>
-                                        <NativeSelectRoot>
-                                                <NativeSelectField placeholder="Aucune donnée" isDisabled />
-                                        </NativeSelectRoot>
+                                        <Select placeholder="Aucune donnée" isDisabled />
                                 </FormControl>
                         )}
 
@@ -202,25 +197,23 @@ function StepSelection({
                                 return (
                                         <FormControl key={field.id}>
                                                 <FormLabel>{field.label}</FormLabel>
-                                                <NativeSelectRoot>
-                                                        <NativeSelectField
-                                                                placeholder="Sélectionner une option"
-                                                                isDisabled={field.options.length === 0}
-                                                                value={selected ?? ""}
-                                                                onChange={(e) =>
-                                                                        updateSelection(
-                                                                                field.id,
-                                                                                e.target.value ? Number(e.target.value) : undefined
-                                                                        )
-                                                                }>
-                                                                <option value="">Aucune</option>
-                                                                {field.options.map((option) => (
-                                                                        <option key={option.id} value={option.id}>
-                                                                                {option.label}
-                                                                        </option>
-                                                                ))}
-                                                        </NativeSelectField>
-                                                </NativeSelectRoot>
+                                                <Select
+                                                        placeholder="Sélectionner une option"
+                                                        value={selected ?? ""}
+                                                        onChange={(e) =>
+                                                                updateSelection(
+                                                                        field.id,
+                                                                        e.target.value ? Number(e.target.value) : undefined
+                                                                )
+                                                        }
+                                                        isDisabled={field.options.length === 0}>
+                                                        <option value="">Aucune</option>
+                                                        {field.options.map((option) => (
+                                                                <option key={option.id} value={option.id}>
+                                                                        {option.label}
+                                                                </option>
+                                                        ))}
+                                                </Select>
                                         </FormControl>
                                 );
                         })}
