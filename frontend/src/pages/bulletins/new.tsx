@@ -1,9 +1,5 @@
 import { AppShell } from "@/interfaces/components/layout/AppShell";
 import {
-        Alert,
-        AlertDescription,
-        AlertIcon,
-        AlertTitle,
         Box,
         Button,
         Heading,
@@ -94,22 +90,27 @@ export default function BulletinCreatePage() {
         };
 
         return (
-                <AppShell>
-                        <RequireAuth>
-                                <Heading size="lg" mb={6}>
-                                        Création d&apos;un bulletin
+        <AppShell>
+                <RequireAuth>
+                        <Heading size="lg" mb={6}>
+                                Création d&apos;un bulletin
+                        </Heading>
+                        <Box
+                                mb={6}
+                                borderRadius="lg"
+                                borderWidth="1px"
+                                borderColor="blue.200"
+                                bg="blue.50"
+                                p={4}>
+                                <Heading as="h3" size="sm" mb={1} color="blue.900">
+                                        API en lecture seule
                                 </Heading>
-                                <Alert status="info" mb={6} borderRadius="lg">
-                                        <AlertIcon />
-                                        <Box>
-                                                <AlertTitle>API en lecture seule</AlertTitle>
-                                                <AlertDescription>
-                                                        La création nécessite un endpoint POST sur /api/reports. Les sélections et valeurs saisies sont
-                                                        préparées, mais aucune requête n&apos;est envoyée tant que le backend ne l&apos;expose pas.
-                                                </AlertDescription>
-                                        </Box>
-                                </Alert>
-                                {/* Progress simplified */}
+                                <Text fontSize="sm" color="blue.900">
+                                        La création nécessite un endpoint POST sur /api/reports. Les sélections et valeurs saisies sont préparées,
+                                        mais aucune requête n&apos;est envoyée tant que le backend ne l&apos;expose pas.
+                                </Text>
+                        </Box>
+                        {/* Progress simplified */}
                                 <HStack mb={6}>
                                         <Box flex={1} h="1" bg={step >= 1 ? "primary" : "gray.200"} />
                                         <Box flex={1} h="1" bg={step >= 2 ? "primary" : "gray.200"} />
@@ -182,7 +183,7 @@ function StepSelection({
                                 <FormControl>
                                         <FormLabel>Chargement des champs…</FormLabel>
                                         <NativeSelectRoot>
-                                                <NativeSelectField placeholder="Chargement" disabled />
+                                                <NativeSelectField placeholder="Chargement" isDisabled />
                                         </NativeSelectRoot>
                                 </FormControl>
                         )}
@@ -191,7 +192,7 @@ function StepSelection({
                                 <FormControl>
                                         <FormLabel>Aucun champ disponible</FormLabel>
                                         <NativeSelectRoot>
-                                                <NativeSelectField placeholder="Aucune donnée" disabled />
+                                                <NativeSelectField placeholder="Aucune donnée" isDisabled />
                                         </NativeSelectRoot>
                                 </FormControl>
                         )}
@@ -204,7 +205,7 @@ function StepSelection({
                                                 <NativeSelectRoot>
                                                         <NativeSelectField
                                                                 placeholder="Sélectionner une option"
-                                                                disabled={field.options.length === 0}
+                                                                isDisabled={field.options.length === 0}
                                                                 value={selected ?? ""}
                                                                 onChange={(e) =>
                                                                         updateSelection(
