@@ -39,6 +39,8 @@ class AuthController extends AbstractController
             ], Response::HTTP_UNAUTHORIZED);
         }
 
+        // Renew the session to prevent fixation before storing the authenticated user
+        $session->migrate(true);
         $session->set('user_id', $user->getId());
 
         return new JsonResponse([
