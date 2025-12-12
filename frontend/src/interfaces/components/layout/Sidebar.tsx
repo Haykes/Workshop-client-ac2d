@@ -2,10 +2,18 @@ import { Box, VStack, Button, HStack, Text } from "@chakra-ui/react";
 import { Avatar } from "@chakra-ui/avatar";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useLogout, useSession } from "@/interfaces/hooks/useAuth";
 
 export function Sidebar() {
-	const router = useRouter();
-	const isActive = (href: string): boolean => router.pathname === href;
+        const router = useRouter();
+        const { data } = useSession();
+        const logout = useLogout();
+        const isActive = (href: string): boolean => router.pathname === href;
+
+        const handleLogout = async () => {
+                await logout.mutateAsync();
+                await router.push("/login");
+        };
 
 	return (
 		<Box
@@ -39,19 +47,36 @@ export function Sidebar() {
 					</Button>
 				</Link>
 			</VStack>
-			<Box p={4} borderTopWidth="1px">
-				<HStack>
-					<Avatar size="sm" name="John Doe" />
-					<Box>
-						<Text fontSize="sm" fontWeight="medium">
-							John Doe
-						</Text>
-						<Text fontSize="xs" color="gray.500">
-							Technicien
-						</Text>
-					</Box>
-				</HStack>
-			</Box>
-		</Box>
-	);
+                        <Box p={4} borderTopWidth="1px">
+                                <HStack>
+                                        <Avatar
+                                                size="sm"
+                                                name={
+                                                        data?.user
+                                                                ? `${data.user.firstName} ${data.user.lastName}`
+                                                                : "Utilisateur"
+                                                }
+                                        />
+                                        <Box>
+                                                <Text fontSize="sm" fontWeight="medium">
+                                                        {data?.user
+                                                                ? `${data.user.firstName} ${data.user.lastName}`
+                                                                : "Utilisateur"}
+                                                </Text>
+                                                <Text fontSize="xs" color="gray.500">
+                                                        {data?.user?.roles?.[0] ?? "Connecté"}
+                                                </Text>
+                                        </Box>
+                                </HStack>
+                                <Button
+                                        mt={3}
+                                        size="sm"
+                                        variant="ghost"
+                                        colorScheme="red"
+                                        onClick={() => void handleLogout()}>
+                                        Déconnexion
+                                </Button>
+                        </Box>
+                </Box>
+        );
 }

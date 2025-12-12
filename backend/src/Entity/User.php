@@ -8,19 +8,24 @@ use ApiPlatform\Metadata\GetCollection;
 use App\Dto\UserOutput;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity()]
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+
+#[ORM\Entity(repositoryClass: \App\Repository\UserRepository::class)]
 #[ApiResource(
     operations: [
         new GetCollection(output: UserOutput::class),
         new Get(output: UserOutput::class)
     ]
 )]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private int $id;
+    private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
     private string $firstName;
@@ -34,14 +39,18 @@ class User
     #[ORM\Column(type: 'string', length: 255)]
     private string $password;
 
-    public function getId(): int
+    #[ORM\ManyToMany(targetEntity: Role::class)]
+    #[ORM\JoinTable(name: 'role_user')]
+    private Collection $roles;
+
+    public function __construct()
     {
-        return $this->id;
+        $this->roles = new ArrayCollection();
     }
 
-    public function setId(int $id): void
+    public function getId(): ?int
     {
-        $this->id = $id;
+        return $this->id;
     }
 
     public function getFirstName(): string
@@ -82,5 +91,40 @@ class User
     public function setPassword(string $password): void
     {
         $this->password = $password;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email;
+    }
+
+    public function eraseCredentials(): void
+    {
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getRoles(): array
+    {
+        $roles = $this->roles
+            ->map(static fn(Role $role) => $role->getLabel())
+            ->toArray();
+
+        $roles[] = 'ROLE_USER';
+
+        return array_values(array_unique($roles));
+    }
+
+    public function addRole(Role $role): void
+    {
+        if (!$this->roles->contains($role)) {
+            $this->roles->add($role);
+        }
+    }
+
+    public function removeRole(Role $role): void
+    {
+        $this->roles->removeElement($role);
     }
 }
