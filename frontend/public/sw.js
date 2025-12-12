@@ -20,8 +20,11 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-	const req = event.request;
-	if (req.method !== "GET") return;
+        const req = event.request;
+        if (req.method !== "GET") return;
+
+        const isSameOrigin = new URL(req.url).origin === self.location.origin;
+        if (!isSameOrigin) return;
 	event.respondWith(
 		caches.match(req).then((cached) =>
 			cached || fetch(req).then((res) => {
