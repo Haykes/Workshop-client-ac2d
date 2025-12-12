@@ -1,80 +1,79 @@
+import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { httpClient } from "@/shared/api/httpClient";
-import type { LoginRequestDto } from "@/interfaces/dtos/auth";
-
-interface SessionUser {
-	id: number;
-	email: string;
-	name: string;
-	roles: string[];
-}
+import type {
+        AuthUserDto,
+        LoginRequestDto,
+        LoginResponseDto,
+        SessionResponseDto,
+} from "@/interfaces/dtos/auth";
 
 interface SessionState {
-	user: SessionUser | null;
+        user: AuthUserDto | null;
 }
 
 export function useSession() {
-	return useQuery<SessionState>({
-		queryKey: ["session"],
-		queryFn: async () => {
-			// Mock session for demo - replace with real API call
-			return {
-				user: {
-					id: 1,
-					email: "john.doe@ac2d.com",
-					name: "John Doe",
-					roles: ["technicien"],
-				},
-			};
-		},
-		staleTime: 60_000,
-		gcTime: 5 * 60_000,
-	});
+        return useQuery<SessionState>({
+                queryKey: ["session"],
+                queryFn: async () => {
+                        try {
+                                const { data } = await httpClient.get<SessionResponseDto>("/api/auth/me");
+
+                                if (!data.authenticated || !data.user) {
+                                        return { user: null };
+                                }
+
+                                return { user: data.user };
+                        } catch (error) {
+                                return { user: null };
+                        }
+                },
+                retry: false,
+                staleTime: 60_000,
+                gcTime: 5 * 60_000,
+        });
 }
 
 export function useLogin() {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationKey: ["login"],
-		mutationFn: async (payload: LoginRequestDto) => {
-			// Mock login for demo - replace with real API call
-			await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network delay
+        const queryClient = useQueryClient();
+        return useMutation({
+                mutationKey: ["login"],
+                mutationFn: async (payload: LoginRequestDto) => {
+                        try {
+                                const { data } = await httpClient.post<LoginResponseDto>(
+                                        "/api/auth/login",
+                                        payload,
+                                );
 
-			if (
-				payload.username === "admin@ac2d.com" &&
-				payload.password === "admin"
-			) {
-				return {
-					success: true,
-					user: {
-						id: 1,
-						email: "admin@ac2d.com",
-						name: "Admin User",
-						roles: ["admin", "technicien"],
-					},
-				};
-			}
+                                if (!data.success || !data.user) {
+                                        throw new Error(data.message ?? "Identifiants invalides");
+                                }
 
-			return {
-				success: false,
-				user: null,
-			};
-		},
-		onSuccess: async () => {
-			await queryClient.invalidateQueries({ queryKey: ["session"] });
-		},
-	});
+                                return data.user;
+                        } catch (error) {
+                                if (axios.isAxiosError(error)) {
+                                        const message = (error.response?.data as LoginResponseDto | undefined)?.message;
+                                        throw new Error(message ?? "Identifiants invalides");
+                                }
+
+                                throw error;
+                        }
+                },
+                onSuccess: async (user) => {
+                        await queryClient.setQueryData<SessionState>(["session"], { user });
+                },
+        });
 }
 
 export function useLogout() {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationKey: ["logout"],
-		mutationFn: async () => {
-			await httpClient.post("/logout");
-		},
-		onSuccess: async () => {
-			await queryClient.invalidateQueries({ queryKey: ["session"] });
-		},
-	});
+        const queryClient = useQueryClient();
+        return useMutation({
+                mutationKey: ["logout"],
+                mutationFn: async () => {
+                        await httpClient.post("/api/auth/logout");
+                },
+                onSuccess: async () => {
+                        await queryClient.setQueryData<SessionState>(["session"], { user: null });
+                },
+        });
 }

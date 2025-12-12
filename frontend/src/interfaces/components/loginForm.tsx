@@ -37,28 +37,21 @@ export function LoginForm() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		await login
-			.mutateAsync({ username: email, password })
-			.then(async (res: { success: boolean; user: unknown }) => {
-				if (res.success) {
-					toaster.create({
-						title: "Connecté",
-						status: "success",
-					});
-					await router.push("/dashboard");
-				} else {
-					toaster.create({
-						title: "Échec de connexion",
-						status: "error",
-					});
-				}
-			})
-			.catch(() =>
-				toaster.create({
-					title: "Erreur serveur",
-					status: "error",
-				})
-			);
+                await login
+                        .mutateAsync({ email, password })
+                        .then(async () => {
+                                toaster.create({
+                                        title: "Connecté",
+                                        status: "success",
+                                });
+                                await router.push("/dashboard");
+                        })
+                        .catch((err: Error) =>
+                                toaster.create({
+                                        title: err.message ?? "Erreur serveur",
+                                        status: "error",
+                                })
+                        );
 	};
 
 	return (
